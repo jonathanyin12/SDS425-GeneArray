@@ -2,3 +2,5 @@ pandas
 ipykernel
 matplotlib
 scikit-learn
+umap-learn
+plotly
