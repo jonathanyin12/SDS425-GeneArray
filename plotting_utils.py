@@ -163,13 +163,17 @@ def plot_3d_scatter(
             yaxis_title=y_col,
             zaxis_title=z_col,
         ),
-        width=1200,
+        width=1600,
         height=1200,
         showlegend=True,
     )
 
     if filename:
-        fig.write_html(filename)
+        fig.write_html(filename + ".html")
+        try:
+            fig.write_image(filename + ".png")
+        except Exception as e:
+            print(f"Error writing image: {e}")
 
     fig.show()
     return fig

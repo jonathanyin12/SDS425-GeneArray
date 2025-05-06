@@ -7,3 +7,5 @@ plotly
 seaborn
 tqdm
 ipywidgets
+kaleido
+nbformat
