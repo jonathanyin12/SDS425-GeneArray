@@ -1,13 +1,14 @@
+import matplotlib.pyplot as plt
+import numpy as np
 import plotly.graph_objects as go
 import seaborn as sns
-from matplotlib import pyplot as plt
 
 from constants import FEATURE_COLS
 
 
 def plot_feature_histograms(df, title=""):
     # Create a 10 by 13 grid of histograms for the 130 features
-    fig, axes = plt.subplots(10, 13, figsize=(30, 12))
+    fig, axes = plt.subplots(13, 10, figsize=(20, 15))
 
     # Flatten the axes array for easier iteration
     axes = axes.flatten()
@@ -32,6 +33,83 @@ def plot_feature_histograms(df, title=""):
     plt.show()
 
 
+def compare_feature_histograms(df, type1, type2, title=""):
+    # Create a 10 by 13 grid of histograms for the 130 features
+    fig, axes = plt.subplots(13, 10, figsize=(20, 15))
+
+    # Flatten the axes array for easier iteration
+    axes = axes.flatten()
+
+    # Plot each feature in its own subplot
+    for i, feature in enumerate(FEATURE_COLS):
+        if i < len(axes):  # Ensure we don't exceed the number of subplots
+            # Create density plots that integrate to 1 for better comparison
+            sns.histplot(
+                df[df["type"] == type1][feature],
+                bins=20,
+                kde=True,
+                ax=axes[i],
+                stat="density",
+                alpha=0.5,
+                label=type1,
+            )
+            sns.histplot(
+                df[df["type"] == type2][feature],
+                bins=20,
+                kde=True,
+                ax=axes[i],
+                stat="density",
+                alpha=0.5,
+                label=type2,
+            )
+            # axes[i].set_title(f"{feature}", fontsize=8)
+            axes[i].set_xlabel("")
+            axes[i].set_ylabel("")
+            # Hide x-axis tick labels
+            axes[i].set_xticklabels([])
+            axes[i].set_yticklabels([])
+            # Remove ticks from both axes
+            axes[i].tick_params(axis="both", which="both", length=0)
+
+    # Add a legend with the two types
+    # Create a custom legend with patches
+    from matplotlib.patches import Patch
+
+    # Get the colors used by seaborn
+    colors = plt.cm.tab10.colors
+
+    # Create legend elements
+    legend_elements = [
+        Patch(facecolor=colors[0], label=type1),
+        Patch(facecolor=colors[1], label=type2),
+    ]
+
+    # Add the legend to the figure, not to a specific subplot
+    fig.legend(handles=legend_elements, loc="upper right", bbox_to_anchor=(0.9, 0.92))
+    # Reduce spacing between subplots
+    plt.subplots_adjust(hspace=0.0, wspace=0.0)
+    if title:
+        plt.suptitle(title, y=0.9)
+    plt.show()
+
+
+def plot_pca_explained_variance(pca):
+    explained_variance_ratio = pca.explained_variance_ratio_
+    cumulative_variance_ratio = np.cumsum(explained_variance_ratio)
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(
+        range(1, len(explained_variance_ratio) + 1),
+        cumulative_variance_ratio,
+        "bo-",
+    )
+    plt.xlabel("Number of Components")
+    plt.ylabel("Cumulative Explained Variance Ratio")
+    plt.title("PCA Explained Variance Ratio")
+    plt.grid(True)
+    plt.show()
+
+
 def plot_3d_scatter(
     df,
     x_col,
@@ -40,7 +118,6 @@ def plot_3d_scatter(
     type_col="type",
     outlier_col=None,
     title="3D Scatter Plot",
-    hover_data=None,
     filename=None,
 ):
     """
@@ -58,20 +135,12 @@ def plot_3d_scatter(
         Column name for the outlier variable to color by
     title : str, default="3D Scatter Plot"
         Title for the plot
-    hover_data : list, default=None
-        List of column names to include in hover information (e.g., ["row", "col", "well"])
     filename : str, default=None
         Filename to save the plot as HTML
     """
     fig = go.Figure()
 
-    # Default hover data if none provided
-    if hover_data is None:
-        hover_data = []
-
-    # Always include type_col in hover_data if not already present
-    if type_col not in hover_data:
-        hover_data = [type_col] + hover_data
+    hover_data = df.columns[3:]
 
     # Construct hovertemplate string dynamically
     ht = ""
@@ -163,9 +232,16 @@ def plot_3d_scatter(
             yaxis_title=y_col,
             zaxis_title=z_col,
         ),
-        width=1600,
-        height=1200,
+        width=1200,
+        height=800,
         showlegend=True,
+        margin=dict(
+            l=20,
+            r=20,
+            b=20,
+            t=50,
+            pad=4,
+        ),
     )
 
     if filename:
